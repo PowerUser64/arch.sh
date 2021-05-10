@@ -28,6 +28,9 @@ first few lines
    - When installing an AUR helper (to make snapshots appear in the grub boot 
 menu), you will be asked for your password once more
 4. Reboot and enjoy your new Arch Linux installation!
+5. Optional 5th step: run the automatically-created dconf script (~/dconf.sh)
+to get some sensible defaults in your system configuration (this step will
+hopefully be fully automated at some point)
 
 ## Contributing
 Contributions are more than welcome! Please submit changes in a pull request 
