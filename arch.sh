@@ -349,17 +349,27 @@ chsh "$USER_TO_ADD" -s "$(which zsh)"
 #EODE
 # (end of desktop environment)
 
-##############################################
-##                                          ##
-##   Post-install one-time startup script   ##
-##                                          ##
-##############################################
-# This script will enable snapshots, the firewall, and (hopefully) set some sensible defaults to the dconf
+######################################################################
+##                                                                  ##
+##   Post-install one-time startup script and manual dconf script   ##
+##                                                                  ##
+######################################################################
+# These scripts will enable snapshots, the firewall, and make a script that can
+#    be manually run to set some sensible defaults to the dconf
 
-# Dconf/Gnome settings tweaks
-# Uncomment this line to disable modifying the dconf
+#####################################
+##   Dconf/Gnome settings tweaks   ## (this script must be run manually as of now)
+#####################################
+
+# Uncomment this line to disable creating a postins the dconf
 # :<<\##EODC
-DCONF_MODS=true
+
+# If you want to add your own dconf changes here, the way I got these is actually quite easy, here are the steps:
+# 1- do a `dconf watch /` in your terminal
+# 2- change the thing you want to add here (only do them one at a time so you know what does what)
+# 3- go back to the terminal and copy paste the output in to a command similar to the ones here
+# (note that you need to put quotes around the quotes as shown here, or it won't work)
+
 cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
 #!/bin/sh
 sleep 1
@@ -402,21 +412,17 @@ dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/cus
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/name \"'Disable Ctrl+Q'\"
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings \"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']\"
 dconf dump /
-"
-
-# If you want to add your own dconf changes here, the way I got these is actually quite easy, here are the steps:
-# 1- do a `dconf watch /` in your terminal
-# 2- change the thing you want to add here (only do them one at a time so you know what does what)
-# 3- go back to the terminal and copy paste the output in to a command similar to the ones here
-# (note that you need to put quotes around the quotes as shown here, or it won't work)
-# sed -i 's-~/dconf.sh\n--g' ~/.profile # Remove the line from the profile
-# rm ~/dconf.sh # delete this script
 ##EODC
+arch-chroot "$MNT" chmod +x "$MNT/home/${USER_TO_ADD}/dconf.sh"
+arch-chroot "$MNT" chown "$USER_TO_ADD" "/home/${USER_TO_ADD}/dconf.sh"
 #EODC
 
+################################
+##   Firewall and Snapshots   ##
+################################
+
 # To disable the creation of this script, uncomment this line:
-# :<<\#EOS
-SCRIPT_CREATED=true
+# :<<\##EOPS
 
 # Create a systemd service to run the script (this will get disabled and deleted by the script)
 cat >> "$MNT/etc/systemd/system/post-install.service" << \#EOF 
@@ -496,10 +502,13 @@ echo "Done!"
 #EOS
 
 # mark the post-install script as executable
-[ "$SCRIPT_CREATED" = true ] && arch-chroot "$MNT" chmod +x "/etc/systemd/system/post-install.service"
-[ "$SCRIPT_CREATED" = true ] && arch-chroot "$MNT" chmod +x "/post-install.sh"
+   # This makes an error for some reason, but it doesn't work if I don't do this, so...
+arch-chroot "$MNT" chmod +x "/etc/systemd/system/post-install.service"
+arch-chroot "$MNT" chmod +x "/post-install.sh"
 # make the script run on boot
-[ "$SCRIPT_CREATED" = true ] && arch-chroot "$MNT" systemctl enable post-install.service
+arch-chroot "$MNT" systemctl enable post-install.service
+
+##EOPS
 
 echo
 typewriter "${Green}Installation complete!${NC} You can reboot and enjoy your new Arch Linux installation ${Yellow}:)${NC}"
