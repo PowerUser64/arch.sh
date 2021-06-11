@@ -23,7 +23,7 @@ HOSTNAME='archlinux'
 BOOTLOADER_ID='archlinux-btrfs' # not really sure what the requirements for this one are, but you probably shouldn't get too adventurous
 MIRROR_COUNTRY='United States'  # see `reflector --list-countries` for a list of countries
 TIME_ZONE='America/Los_Angeles' # see `timedatectl list-timezones` for a list of timezones
-LOCALE='en_US.UTF-8'            # see `localectl list-locales` for a list of locales
+LOCALE='en_US.UTF-8'            # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
 KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
 KEY_BIND_MODS=0                 # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
 
