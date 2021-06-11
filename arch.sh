@@ -7,31 +7,25 @@
 # LICENSE: GNU GPLv3
 ###
 
-## What these various disables do (in order):
-# Ignore unset variables (unused colors)
-## shellcheck disable=SC2034
-# "modification" of variable in subshell (x2)
+# ignore the "modification" of variable in subshell (x2)
 # shellcheck disable=SC2030
 # shellcheck disable=SC2031
 
-# Configuration section
-HOSTNAME='archlinux'
-# not really sure what the requirements for this are, but you probably shouldn't get too adventerous
-BOOTLOADER_ID='archlinux-btrfs'
-# needs to begin with a letter, be all lowercase, have no hyphens, and no underscores
-USER_TO_ADD='arch-user'
-# (see `reflector --list-countries` for a list of countries)
-MIRROR_COUNTRY='United States' 
-TIME_ZONE='America/Los_Angeles'
-LANGUAGE='LANG=en_US.UTF-8' 
-KEYMAP='us' # see `localectl list-keymaps` for a list of keymaps
-MNT='/mnt'
-#SUBVOLS=(home cache log snapshots) <-- broke things, so it's not used right now
+## Configuration section
+# Partitions (set them up before you run the script)
 ROOT='CHANGEME'
-# if you're installing Arch alongside another OS, make sure to backup your existing boot partition or make a new one
-BOOT='CHANGEME'
-# If you don't have a swap partition, just set this to a blank string
-SWAP='CHANGEME'
+BOOT='CHANGEME'                 # if you're installing Arch alongside another OS, make sure to backup your existing boot partition or make a new one for this
+SWAP='CHANGEME'                 # set to a blank string to disable
+MNT='/mnt'                      # the folder all partitions will be mounted to
+
+USER_TO_ADD='arch-user'         # needs to begin with a letter, be all lowercase, have no hyphens, and no underscores
+HOSTNAME='archlinux'
+BOOTLOADER_ID='archlinux-btrfs' # not really sure what the requirements for this one are, but you probably shouldn't get too adventurous
+MIRROR_COUNTRY='United States'  # see `reflector --list-countries` for a list of countries
+TIME_ZONE='America/Los_Angeles' # see `timedatectl list-timezones` for a list of timezones
+LOCALE='en_US.UTF-8'            # see `localectl list-locales` for a list of locales
+KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
+KEY_BIND_MODS=0                 # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -173,7 +167,7 @@ arch-chroot "$MNT" hwclock --systohc || error "$LINENO"
 typewriter "Generating ${Green}locales${NC}"
 # prepend the locale to the locale.gen file, rather than appending to it (just in case the user needs to find it)
 arch-chroot "$MNT" bash -c "sed -i '1s;^;${LOCALE}\n;' /etc/locale.gen" || error "$LINENO"
-arch-chroot "$MNT" echo "$LANGUAGE" > /etc/locale.conf || error "$LINENO"
+arch-chroot "$MNT" echo "LANG=$LOCALE" > /etc/locale.conf || error "$LINENO"
 arch-chroot "$MNT" locale-gen || error "$LINENO"
 arch-chroot "$MNT" bash -c "echo 'KEYMAP=${KEYMAP}' >> /etc/vconsole.conf" || error "$LINENO"
 echo "${Green}Done!${NC}"
@@ -385,7 +379,9 @@ dconf write /org/gtk/tweaks/show-extensions-notice 'false'
 # dark theme please
 dconf write /org/gtk/desktop/gtk-theme \"'Adwita-dark'\"
 dconf write /org/gtk/desktop/icon-theme \"'Papirus-Dark'\"
+##EODC
 
+[[ $KEY_BIND_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EOKY
 # Keybindings
 # use alt tab to switch windows, rather than switch applications (Recommended tweak)
 dconf write /org/gnome/desktop/wm/keybindings/switch-applications \"'@as []'\"
@@ -407,7 +403,7 @@ dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/cus
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/name \"'Disable Ctrl+Q'\"
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings \"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']\"
 dconf dump /
-##EODC
+##EOKY
 arch-chroot "$MNT" chmod +x "$MNT/home/${USER_TO_ADD}/dconf.sh"
 arch-chroot "$MNT" chown "$USER_TO_ADD" "/home/${USER_TO_ADD}/dconf.sh"
 #EODC
