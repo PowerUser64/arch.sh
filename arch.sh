@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 ###
 # Author: Blake North (PowerUser64)
 # File name: arch.sh
@@ -8,8 +8,11 @@
 ###
 
 ## What these various disables do (in order):
-# Ignore unset variables (unused colors), flags on echo (echo -n), string indexing (typewriter), "modification" of variable in subshell (x2)
-# shellcheck disable=SC2034,SC3037,SC3057,SC2030,SC2031
+# Ignore unset variables (unused colors)
+## shellcheck disable=SC2034
+# "modification" of variable in subshell (x2)
+# shellcheck disable=SC2030
+# shellcheck disable=SC2031
 
 # Configuration section
 HOSTNAME='archlinux'
@@ -371,9 +374,9 @@ chsh "$USER_TO_ADD" -s "$(which zsh)"
 # (note that you need to put quotes around the quotes as shown here, or it won't work)
 
 cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
-#!/bin/sh
+#!/bin/bash
 sleep 1
-# More sensible defaulrs for track pads (Recommended tweak)
+# More sensible defaults for track pads (Recommended tweak)
 dconf write /org/gnome/desktop/peripherals/touchpad/tap-to-click 'true'
 dconf write /org/gnome/desktop/peripherals/touchpad/click-method \"'default'\"
 dconf write /org/gnome/desktop/peripherals/touchpad/middle-click-emulation 'true'
@@ -436,8 +439,8 @@ ExecStart=/post-install.sh
 WantedBy=multi-user.target
 #EOF
 
-# carry over variables to the script in the new install
-(echo '#!/bin/sh'
+# carry over variables to the script in the new install (I'm actually not sure this is necessary)
+(echo '#!/bin/bash'
  echo "USER_TO_ADD='$USER_TO_ADD'"
  echo "EDITOR='$EDITOR'"
  echo "DCONF_MODS='$DCONF_MODS'"

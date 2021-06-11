@@ -19,11 +19,10 @@ hacker you are for installing arch linux.
 
 ## Usage
 0. Boot in to your Arch Linux install environment (live CD/USB)
-1. Download this script using `curl -O https://git.io/JOANo` (`curl | sh` does
-not work here)
+1. Download this script using `curl -O git.io/JOANo`
 2. Use your favorite text editor to change the configuration variables in the 
 first few lines
-3. Run the script with `zsh arch.sh`
+3. Run the script with `bash arch.sh`
    - Create a password when the script asks for it
    - When installing an AUR helper (to make snapshots appear in the grub boot 
 menu), you will be asked for your password once more
