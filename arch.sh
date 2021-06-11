@@ -37,23 +37,11 @@ SWAP='CHANGEME'
 # TODO: add make color optional (always, auto, never)
 
 # Colors to make things look nice
-        Black=$( tput setaf 0 )
-          Red=$( tput setaf 1 )
-        Green=$( tput setaf 2 )
-       Orange=$( tput setaf 3 )
-         Blue=$( tput setaf 4 )
-       Purple=$( tput setaf 5 )
-         Cyan=$( tput setaf 6 )
-    LightGray=$( tput setaf 7 )
-     DarkGray=$( tput setaf 8 )
-     LightRed=$( tput setaf 9 )
-   LightGreen=$( tput setaf 10 )
-       Yellow=$( tput setaf 11 )
-    LightBlue=$( tput setaf 12 )
-  LightPurple=$( tput setaf 13 )
-    LightCyan=$( tput setaf 14 )
-        White=$( tput setaf 15 )
-           NC=$( tput sgr0 ) # No Color
+   Red=$(tput setaf 1)
+ Green=$(tput setaf 2)
+  Cyan=$(tput setaf 6)
+Yellow=$(tput setaf 11)
+    NC=$(tput sgr0) # No Color
 
 # makes it easier for the user to see what's happening, also makes it easier to debug ;)
 pause() {
