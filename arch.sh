@@ -392,6 +392,8 @@ dconf write /org/gnome/desktop/wm/keybindings/switch-applications \"'@as []'\"
 dconf write /org/gnome/desktop/wm/keybindings/switch-applications-backward \"'@as []'\"
 dconf write /org/gnome/desktop/wm/keybindings/switch-windows \"['<Alt>Tab']\"
 dconf write /org/gnome/desktop/wm/keybindings/switch-windows-backward \"['<Shift><Alt>Tab']\"
+# ctrl+f11 to fullscreen any application
+dconf write /org/gnome/desktop/wm/keybindings/toggle-fullscreen \"['<Primary>F11']\"
 # change caps lock into escape and scroll lock into a compose key (a magic button that can combine characters. ex: compose a e = æ)
 dconf write /org/gnome/desktop/input-sources/xkb-options \"['caps:escape', 'compose:sclk']\"
 # ctrl+shift+esc = gnome-system-monitor (task manager)
