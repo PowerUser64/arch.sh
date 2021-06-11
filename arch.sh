@@ -57,26 +57,26 @@ error() {
 TEXT_DELAY='0.007' # the default time to wait between printing characters
 # Type characters out one at a time (with a newline at the end)
 typewriter() {
-    text="$1"
-    # make the delay optional
-    [ -z ${2+x} ] && delay="${TEXT_DELAY}" || delay="$2"
+   text="$1"
+   # make the delay optional
+   [ -z ${2+x} ] && delay="${TEXT_DELAY}" || delay="$2"
 
-    for i in $(seq 0 "${#text}") ; do
-        echo -n "${text:$i:1}"
-        sleep "${delay}"
-    done
-    echo
+   for i in $(seq 0 "${#text}") ; do
+      echo -n "${text:$i:1}"
+      sleep "${delay}"
+   done
+   echo
 }
 # Type characters out one at a time (without a newline at the end)
 typewritern() {
-    text="$1"
-    # make the delay optional
-    [ -z ${2+x} ] && delay="$TEXT_DELAY" || delay="$2"
+   text="$1"
+   # make the delay optional
+   [ -z ${2+x} ] && delay="$TEXT_DELAY" || delay="$2"
 
-    for i in $(seq 0 "${#text}") ; do
-        echo -n "${text:$i:1}"
-        sleep "${delay}"
-    done
+   for i in $(seq 0 "${#text}") ; do
+      echo -n "${text:$i:1}"
+      sleep "${delay}"
+   done
 }
 
 if [ -f "$ROOT" ] || [ -f "$BOOT" ] || { [ -z "$SWAP" ] && [ -f "$SWAP" ]; } then
@@ -284,12 +284,12 @@ typewriter "Installing ${Green}paru${NC}..."
 # I tried every way I could think of to get the user's password in to paru here, but I couldn't. Suggestions?
 arch-chroot "$MNT" bash -c "
    cd '/home/${USER_TO_ADD}'
-   sudo -u \"$USER_TO_ADD\" mkdir git
+   sudo -u '$USER_TO_ADD' mkdir git
    cd git
    pacman -S --color=auto --noconfirm --needed base-devel
-   sudo -u \"$USER_TO_ADD\" git clone https://aur.archlinux.org/paru.git
+   sudo -u '$USER_TO_ADD' git clone https://aur.archlinux.org/paru.git
    cd paru
-   sudo -u \"$USER_TO_ADD\" makepkg --noconfirm -si
+   sudo -u '$USER_TO_ADD' makepkg --noconfirm -si
    " || error "$LINENO"
 ########################
 ##   More snapshots   ##
