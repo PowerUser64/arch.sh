@@ -382,7 +382,7 @@ dconf write /org/gnome/desktop/interface/clock-format  \"'12h'\"
 dconf write /org/gtk/settings/file-chooser/clock-format  \"'12h'\"
 # tell gnome tweaks to not tell me the 'the extensions tab has its own app now'
 dconf write /org/gtk/tweaks/show-extensions-notice 'false'
-# dark theme pls
+# dark theme please
 dconf write /org/gtk/desktop/gtk-theme \"'Adwita-dark'\"
 dconf write /org/gtk/desktop/icon-theme \"'Papirus-Dark'\"
 
