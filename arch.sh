@@ -272,7 +272,9 @@ arch-chroot "$MNT" bash -c "cat > /etc/xdg/reflector/reflector.conf << \##EOF
 --sort rate
 ##EOF
 " || error "$LINENO"
-arch-chroot "$MNT" reflector -c "$MIRROR_COUNTRY" --protocol https --threads 4 --age 8 --download-timeout 2 --connection-timeout 2 --sort rate --save /etc/pacman.d/mirrorlist > /dev/null 2>&1 || error "$LINENO"
+
+# update the mirror list on the target system using the mirror list generated near the start of the script
+cp -f /etc/pacman.d/mirrorlist ${MNT}/etc/pacman.d/mirrorlist || error "$LINENO"
 
 # Uncomment this line to disable installing an AUR helper
 # :<<\#EOAUR
