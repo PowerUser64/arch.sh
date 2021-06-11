@@ -7,6 +7,7 @@
 # LICENSE: GNU GPLv3
 ###
 
+# Shellcheck things. Debug only
 # ignore the "modification" of variable in subshell (x2)
 # shellcheck disable=SC2030
 # shellcheck disable=SC2031
