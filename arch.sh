@@ -96,9 +96,19 @@ timedatectl set-ntp true
 if ! [ -f ".mirrors_updated" ]; then # Don't refresh mirrors more than once if the script is run multiple times
    typewriter "${Green}Updating mirrors${NC} before continuing"
    typewriter "(${Green}this may take a bit${NC}, but it will ensure your downloads work)..."
-        # put your own country in here
-   reflector -c "$MIRROR_COUNTRY" --protocol https --threads 4 --age 8 --download-timeout 2 --connection-timeout 2 --sort rate --save /etc/pacman.d/mirrorlist > /dev/null 2>&1 || error "$LINENO"
-   touch .mirrors_updated # Don't refresh mirrors more than once if the script is run multiple times
+
+   reflector \
+      -c "$MIRROR_COUNTRY" \
+      --protocol https \
+      --threads 4 \
+      --age 8 \
+      --download\
+      -timeout 2 -\
+      -connection-timeout 2 \
+      --sort rate \
+      --save /etc/pacman.d/mirrorlist \
+      > /dev/null 2>&1 || error "$LINENO" &&
+      touch .mirrors_updated # Don't refresh mirrors more than once if the script is run multiple times
    typewriter "Mirror update ${Green}complete${NC}"
 fi
 
