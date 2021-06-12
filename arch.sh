@@ -12,13 +12,16 @@
 # shellcheck disable=SC2030
 # shellcheck disable=SC2031
 
-## Configuration section
+################################
+## User Configuration Section ##
+################################
 # Partitions (set them up before you run the script)
-ROOT='CHANGEME'
+ROOT='CHANGEME'                 # ex: /dev/sda3
 BOOT='CHANGEME'                 # if you're installing Arch alongside another OS, make sure to backup your existing boot partition or make a new one for this
 SWAP='CHANGEME'                 # set to a blank string to disable
 MNT='/mnt'                      # the folder all partitions will be mounted to
 
+# Installation settings
 USER_TO_ADD='arch-user'         # needs to begin with a letter, be all lowercase, have no hyphens, and no underscores
 HOSTNAME='archlinux'
 BOOTLOADER_ID='archlinux-btrfs' # not really sure what the requirements for this one are, but you probably shouldn't get too adventurous
@@ -120,7 +123,7 @@ fi
 ##                                    ##
 ########################################
 
-# format                                                              # Only print the swap if it is specified
+# format drives
 typewriter "This will ${Red}FORMAT${NC} the partitions you specified ($([ -n "${SWAP}" ] && echo -n "${Red}${SWAP}${NC}, ${Red}${ROOT}${NC}," || echo -n "${Red}${ROOT}${NC}") and ${Red}${BOOT}${NC})" 0.03
 typewriter "Press enter if you are ${Red}certain${NC} you want to format these devices" 0.03
 # shellcheck disable=SC2162
@@ -254,7 +257,7 @@ pause
 
 # sudoers
 typewriter "Updating the ${Green}sudoers file${NC} for you..."
-arch-chroot "$MNT" bash -c "(echo && echo '# From the arch linux install script to give all users in the wheel group sudo privilages' && 
+arch-chroot "$MNT" bash -c "(echo && echo '# From arch.sh: give all users in the wheel group sudo privilages' && 
    echo '%wheel ALL=(ALL) ALL') | sudo EDITOR='tee -a' visudo" > /dev/null 2>&1 || error "$LINENO"
 pause
 
