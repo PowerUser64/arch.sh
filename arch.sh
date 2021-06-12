@@ -126,8 +126,8 @@ read
 typewriter "Formatting $([ -n "${SWAP}" ] && echo -n "${Red}${SWAP}${NC}, ${Red}${ROOT}${NC}," || echo -n "${Red}${ROOT}${NC}") and ${Red}${BOOT}${NC} in 5 seconds" && sleep 6 # give the user extra time to cancel on purpose
 umount -l "$MNT" # unmount the target so the script can be run more than once
 
-# swapon if the user has a swap partition set
-[ -z "${SWAP}" ] && (mkswap "${SWAP}" && swapon "${SWAP}") > /dev/null 2>&1
+# Setup the swap partition if the user specified one above
+([ -z "${SWAP}" ] && (mkswap "${SWAP}" && swapon "${SWAP}") > /dev/null 2>&1) || error $LINENO
 mkfs.fat -F32 "${BOOT}" || error "$LINENO"
 mkfs.btrfs -f "${ROOT}" || error "$LINENO"
 echo "${Green}Done!${NC}"
