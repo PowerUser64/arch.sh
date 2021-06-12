@@ -16,26 +16,26 @@
 ## User Configuration Section ##
 ################################
 # Partitions (set them up before you run the script)
-ROOT='CHANGEME'                 # ex: /dev/sda3
-BOOT='CHANGEME'                 # if you're installing Arch alongside another OS, make sure to backup your existing boot partition or make a new one for this
-SWAP='CHANGEME'                 # set to a blank string to disable
-MNT='/mnt'                      # the folder all partitions will be mounted to
+ROOT='CHANGEME'                  # ex: /dev/sda3
+BOOT='CHANGEME'                  # if you're installing Arch alongside another OS, make sure to backup your existing boot partition or make a new one for this
+SWAP='CHANGEME'                  # set to a blank string to disable
+MNT='/mnt'                       # the folder all partitions will be mounted to
 
 # Installation settings
-USER_TO_ADD='arch-user'         # needs to begin with a letter, be all lowercase, have no hyphens, and no underscores
+USER_TO_ADD='arch-user'          # needs to begin with a letter, be all lowercase, have no hyphens, and no underscores
 HOSTNAME='archlinux'
-BOOTLOADER_ID='archlinux-btrfs' # not really sure what the requirements for this one are, but you probably shouldn't get too adventurous
-MIRROR_COUNTRY='United States'  # see `reflector --list-countries` for a list of countries
-TIME_ZONE='America/Los_Angeles' # see `timedatectl list-timezones` for a list of timezones
-LOCALE='en_US.UTF-8'            # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
-KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
-LAPTOP=0                        # if you are installing on a laptop, set this to 1 to install power management tools
+BOOTLOADER_ID='archlinux-btrfs'  # not really sure what the requirements for this one are, but you probably shouldn't get too adventurous
+MIRROR_COUNTRY='United States'   # see `reflector --list-countries` for a list of countries
+TIME_ZONE='America/Los_Angeles'  # see `timedatectl list-timezones` for a list of timezones
+LOCALE='en_US.UTF-8'             # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
+KEYMAP='us'                      # see `localectl list-keymaps` for a list of keymaps
+LAPTOP=0                         # if you are installing on a laptop, set this to 1 to install power management tools
 
 # Additional installation settings
-DCONF_MODS_BASIC=1              # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
-DCONF_MODS_PLUS=0               # Some more opinionated dconf tweaks, such as dark theme and 12-hour clock
-DCONF_MODS_KEY_BINDS=0          # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
-AUR_HELPER=1                    # Whether to install an AUR helper (paru by default)
+DCONF_MODS_BASIC=1               # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
+DCONF_MODS_PLUS=0                # Some more opinionated dconf tweaks, such as dark theme and 12-hour clock
+DCONF_MODS_KEY_BINDS=0           # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
+AUR_HELPER=1                     # Whether to install an AUR helper (paru by default)
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
