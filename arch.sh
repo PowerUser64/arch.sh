@@ -28,6 +28,7 @@ LOCALE='en_US.UTF-8'            # see /etc/locale.gen for a list of locales (usu
 KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
 KEY_BIND_MODS=0                 # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
 LAPTOP=0                        # if you are installing on a laptop, set this to 1 to install power management tools
+DCONF_MODS=1                    # (recommended to leave on) Some modifications to GNOME, such as enabling shell extensions installed by the script
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -376,7 +377,7 @@ chsh "$USER_TO_ADD" -s "$(which zsh)"
 # 3- go back to the terminal and copy paste the output in to a command similar to the ones here
 # (note that you need to put quotes around the quotes as shown here, or it won't work)
 
-cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
+[[ $DCONF_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
 #!/bin/bash
 sleep 1
 # More sensible defaults for track pads (Recommended tweak)
@@ -400,7 +401,7 @@ dconf write /org/gtk/desktop/gtk-theme \"'Adwita-dark'\"
 dconf write /org/gtk/desktop/icon-theme \"'Papirus-Dark'\"
 ##EODC
 
-[[ $KEY_BIND_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EOKY
+[[ $KEY_BIND_MODS ]] && [[ $DCONF_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EOKY
 # Keybindings
 # use alt tab to switch windows, rather than switch applications (Recommended tweak)
 dconf write /org/gnome/desktop/wm/keybindings/switch-applications \"'@as []'\"
@@ -457,9 +458,9 @@ WantedBy=multi-user.target
 # if you know know how to do these things without a post-install script, please submit a pr :D
 cat >> "$MNT/post-install.sh" << \#EOS
 
-# [ "${DCONF_MODS}" = true ] && chmod +x /home/${USER_TO_ADD}/dconf.sh
-# [ "${DCONF_MODS}" = true ] && chown "$USER_TO_ADD" /home/${USER_TO_ADD}/dconf.sh
-# [ "${DCONF_MODS}" = true ] && sudo -u "$USER_TO_ADD" bash -c "echo '~/dconf.sh' >> ~/.profile" # make the script run when the user logs in
+[[ $DCONF_MODS ]] && chmod +x /home/${USER_TO_ADD}/dconf.sh
+[[ $DCONF_MODS ]] && chown "$USER_TO_ADD" /home/${USER_TO_ADD}/dconf.sh
+[[ $DCONF_MODS ]] && sudo -u "$USER_TO_ADD" bash -c "echo '~/dconf.sh' >> ~/.profile" # make the script run when the user logs in
 
 # firewall (it causes errors if it's done outside the script)
 echo "Setting up the ${Red}fire${NC}${Green}wall${NC}..."
