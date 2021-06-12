@@ -137,22 +137,22 @@ pause
 typewriter "Creating ${Green}sub-volumes${NC}..."
 mount "${ROOT}" "$MNT"
 # create all sub volumes
-btrfs sub create "$MNT/@" || error "$LINENO"
-btrfs sub create "$MNT/@log" || error "$LINENO"
-btrfs sub create "$MNT/@home" || error "$LINENO"
-btrfs sub create "$MNT/@cache" || error "$LINENO"
-btrfs sub create "$MNT/@snapshots" || error "$LINENO"
+btrfs sub create "$MNT/@"           || error "$LINENO"
+btrfs sub create "$MNT/@log"        || error "$LINENO"
+btrfs sub create "$MNT/@home"       || error "$LINENO"
+btrfs sub create "$MNT/@cache"      || error "$LINENO"
+btrfs sub create "$MNT/@snapshots"  || error "$LINENO"
 echo "${Green}Done!${NC}"
 umount "$MNT" || error "$LINENO"
 pause
 
 # mount all sub volumes
 typewriter "${Green}Mounting${NC} sub-volumes..."
-mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@ "${ROOT}" /mnt || error "$LINENO"
-mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@log "${ROOT}" /mnt/var/log || error "$LINENO"
-mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@home "${ROOT}" /mnt/home || error "$LINENO"
-mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@cache "${ROOT}" /mnt/var/cache || error "$LINENO"
-mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@snapshots "${ROOT}" /mnt/.snapshots || error "$LINENO"
+mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@            "${ROOT}" /mnt             || error "$LINENO"
+mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@log         "${ROOT}" /mnt/var/log     || error "$LINENO"
+mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@home        "${ROOT}" /mnt/home        || error "$LINENO"
+mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@cache       "${ROOT}" /mnt/var/cache   || error "$LINENO"
+mount -o noatime,compress=lzo,space_cache=v2,discard=async,X-mount.mkdir,subvol=@snapshots   "${ROOT}" /mnt/.snapshots  || error "$LINENO"
 
 typewriter "Mounting boot (${Red}${BOOT}${NC}) to $MNT/boot/efi"
 mount -o X-mount.mkdir "$BOOT" "$MNT/boot/efi" || error "$LINENO"
