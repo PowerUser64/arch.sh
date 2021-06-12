@@ -296,15 +296,13 @@ arch-chroot "$MNT" bash -c "cat > /etc/xdg/reflector/reflector.conf << \##EOF
 # update the mirror list on the target system using the mirror list generated near the start of the script
 cp -f /etc/pacman.d/mirrorlist ${MNT}/etc/pacman.d/mirrorlist || error "$LINENO"
 
-# Uncomment this line to disable installing an AUR helper
-# :<<\#EOAUR
-AUR_HELPER=1
 ##############
 ##   Paru   ##
 ##############
-typewriter "Installing ${Green}paru${NC}..."
-# I tried every way I could think of to get the user's password in to paru here, but I couldn't. Suggestions?
-arch-chroot "$MNT" bash -c "
+if [[ $AUR_HELPER ]];then
+   typewriter "Installing ${Green}paru${NC}..."
+   # I tried every way I could think of to get the user's password in to paru here, but I couldn't. Suggestions?
+   arch-chroot "$MNT" bash -c "
    cd '/home/${USER_TO_ADD}'
    sudo -u '$USER_TO_ADD' mkdir git
    cd git
@@ -313,12 +311,14 @@ arch-chroot "$MNT" bash -c "
    cd paru
    sudo -u '$USER_TO_ADD' makepkg --noconfirm -si
    " || error "$LINENO"
-########################
-##   More snapshots   ##
-########################
-# display snapshots in grub
-arch-chroot "$MNT" sudo -u "$USER_TO_ADD" paru --noconfirm -S snap-pac-grub || error "$LINENO"
-#EOAUR
+   ########################
+   ##   More snapshots   ##
+   ########################
+   # display snapshots in grub
+   arch-chroot "$MNT" sudo -u "$USER_TO_ADD" paru --noconfirm -S snap-pac-grub || error "$LINENO"
+else
+   typewriter "Skipping the ${Green}AUR helper${NC}"
+fi
 
 # Comment out this line to disable installing more things, like a Desktop environment
 # :<<\#EODE
@@ -351,8 +351,6 @@ if [[ $AUR_HELPER ]];then
       snapper-gui \
       vim-plug zplug nodejs \
    || error "$LINENO"
-else
-   typewriter "${Green}Skipping${NC} the ${Green}AUR helper${NC}"
 fi
 
 arch-chroot "$MNT" sed -i '/HOOKS/s/(/(numlock /' /etc/mkinitcpio.conf || error "$LINENO" # enable numlock on boot (requires mkinitcpio-numlock, needs to go before encrypt)
