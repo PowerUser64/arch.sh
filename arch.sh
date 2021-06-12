@@ -206,23 +206,22 @@ pause
 # Remove TLP if you're not on a laptop
 typewriter "Installing ${Green}packages${NC}!"
 pause
-# If you're curious why I use this yes command with strange parameters, it's because it will make pacman automatically choose either the default option (the '' and the $'\n' part (the $'\n' part just puts in a newline)), or say yes (the 'y' part)
 # TODO: sort packages in to a meaningful order (maybe on separate lines too?)
-arch-chroot "$MNT" bash -c "yes ''$'\n''y' | pacman -S --color=auto grub{,-btrfs} efibootmgr networkmanager network-manager-applet dialog mtools dosfstools git reflector base-devel linux-headers xdg-user-dirs xdg-utils gvfs gvfs-smb nfs-utils inetutils dnsutils bluez{,-utils} cups pipewire{,-{pulse,alsa,jack}} gst-plugin-pipewire libpulse bash-completion openssh snapper rsync reflector acpi acpi_call $([[ $LAPTOP ]] && echo 'tlp') ebtables firewalld sof-firmware nss-mdns acpid os-prober ttf-joypixels" || error "$LINENO"
+arch-chroot "$MNT" bash -c "yes ''$'\n''y' | pacman -S --color=auto $([[ $LAPTOP ]] && echo 'tlp acpi acpi_call acpid') grub{,-btrfs} efibootmgr networkmanager network-manager-applet dialog mtools dosfstools git reflector base-devel linux-headers xdg-user-dirs xdg-utils gvfs gvfs-smb nfs-utils inetutils dnsutils bluez{,-utils} cups pipewire{,-{pulse,alsa,jack}} gst-plugin-pipewire libpulse openssh snapper rsync reflector ebtables firewalld sof-firmware nss-mdns os-prober ttf-joypixels" || error "$LINENO"
 echo "${Green}Done!${NC}"
 pause
 
 # enable services
 typewriter "Enabling ${Green}services${NC} with systemctl"
 # This CAN be done all in one shot, but if it is, systemctl won't say what failed
-([[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable tlp.service)   || error "$LINENO"
-arch-chroot "$MNT" systemctl enable NetworkManager.service           || error "$LINENO"
-arch-chroot "$MNT" systemctl enable bluetooth.service                || error "$LINENO"
-arch-chroot "$MNT" systemctl enable cups.service                     || error "$LINENO"
-arch-chroot "$MNT" systemctl enable reflector.timer                  || error "$LINENO"
-arch-chroot "$MNT" systemctl enable fstrim.timer                     || error "$LINENO"
-arch-chroot "$MNT" systemctl enable firewalld.service                || error "$LINENO"
-arch-chroot "$MNT" systemctl enable acpi.service                     || error "$LINENO"
+arch-chroot "$MNT" systemctl enable NetworkManager.service        || error "$LINENO"
+arch-chroot "$MNT" systemctl enable bluetooth.service             || error "$LINENO"
+arch-chroot "$MNT" systemctl enable cups.service                  || error "$LINENO"
+arch-chroot "$MNT" systemctl enable reflector.timer               || error "$LINENO"
+arch-chroot "$MNT" systemctl enable fstrim.timer                  || error "$LINENO"
+arch-chroot "$MNT" systemctl enable firewalld.service             || error "$LINENO"
+[[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable acpi.service || ! [[ $LAPTOP ]] && error "$LINENO"
+[[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable tlp.service  || ! [[ $LAPTOP ]] && error "$LINENO"
 
 echo "${Green}Done!${NC}"
 
@@ -276,7 +275,7 @@ arch-chroot "$MNT" timedatectl set-ntp true || error "$LINENO"
 arch-chroot "$MNT" timedatectl set-timezone "$TIME_ZONE" || error "$LINENO"
 pause
 
-typewriter "Setting up ${Green}reflector${NC}... (${Green}this may take a while${NC})"
+typewriter "Setting up ${Green}reflector${NC}..."
 # reflector config file
 arch-chroot "$MNT" bash -c "cat > /etc/xdg/reflector/reflector.conf << \##EOF
 --save /etc/pacman.d/mirrorlist
@@ -447,23 +446,16 @@ ExecStart=/post-install.sh
 WantedBy=multi-user.target
 #EOF
 
-# carry over variables to the script in the new install (I'm actually not sure this is necessary)
-(echo '#!/bin/bash'
- echo "USER_TO_ADD='$USER_TO_ADD'"
- echo "EDITOR='$EDITOR'"
- echo "DCONF_MODS='$DCONF_MODS'"
- ) > "$MNT/post-install.sh"
-
 # post-install script to enable snapshots and setup the firewall
-# if you know know how to do these things without a post-install script, please submit a pr :D
+# if you know know how to do any of these things without a post-install script, please submit a pr :D
 cat >> "$MNT/post-install.sh" << \#EOS
+#!/bin/bash
 
 [[ $DCONF_MODS ]] && chmod +x /home/${USER_TO_ADD}/dconf.sh
 [[ $DCONF_MODS ]] && chown "$USER_TO_ADD" /home/${USER_TO_ADD}/dconf.sh
 [[ $DCONF_MODS ]] && sudo -u "$USER_TO_ADD" bash -c "echo '~/dconf.sh' >> ~/.profile" # make the script run when the user logs in
 
 # firewall (it causes errors if it's done outside the script)
-echo "Setting up the ${Red}fire${NC}${Green}wall${NC}..."
 firewall-cmd --add-port=1025-65535/tcp --permanent
 firewall-cmd --add-port=1025-65535/udp --permanent
 firewall-cmd --reload
@@ -480,13 +472,13 @@ mkdir "$MNT/.snapshots"
 mount -a
 chmod 750 "$MNT/.snapshots"
 
-# apply the arch wiki-recommended backup settings
-sed -i "s/ALLOW_USERS=\"\"/ALLOW_USERS=\"$USER_TO_ADD\"/g" /etc/snapper/configs/root
-sed -i 's/TIMELINE_LIMIT_HOURLY="[0-9]*"/TIMELINE_LIMIT_HOURLY="5"/g' /etc/snapper/configs/root
-sed -i 's/TIMELINE_LIMIT_DAILY="[0-9]*"/TIMELINE_LIMIT_DAILY="7"/g' /etc/snapper/configs/root
-sed -i 's/TIMELINE_LIMIT_WEEKLY="[0-9]*"/TIMELINE_LIMIT_WEEKLY="0"/g' /etc/snapper/configs/root
+# apply the arch wiki-recommended backup settings (keep a max of 5 hourly and 7 daily)
+sed -i 's/ALLOW_USERS=""/ALLOW_USERS="$USER_TO_ADD"/g' /etc/snapper/configs/root
+sed -i 's/TIMELINE_LIMIT_HOURLY="[0-9]*"/TIMELINE_LIMIT_HOURLY="5"/g'   /etc/snapper/configs/root
+sed -i 's/TIMELINE_LIMIT_DAILY="[0-9]*"/TIMELINE_LIMIT_DAILY="7"/g'     /etc/snapper/configs/root
+sed -i 's/TIMELINE_LIMIT_WEEKLY="[0-9]*"/TIMELINE_LIMIT_WEEKLY="0"/g'   /etc/snapper/configs/root
 sed -i 's/TIMELINE_LIMIT_MONTHLY="[0-9]*"/TIMELINE_LIMIT_MONTHLY="0"/g' /etc/snapper/configs/root
-sed -i 's/TIMELINE_LIMIT_YEARLY="[0-9]*"/TIMELINE_LIMIT_YEARLY="0"/g' /etc/snapper/configs/root
+sed -i 's/TIMELINE_LIMIT_YEARLY="[0-9]*"/TIMELINE_LIMIT_YEARLY="0"/g'   /etc/snapper/configs/root
 
 # automatically backup the bootloader after installing software
 mkdir /etc/pacman.d/hooks
@@ -513,7 +505,7 @@ echo "Done!"
 #EOS
 
 # mark the post-install script as executable
-   # This makes an error for some reason, but it doesn't work if I don't do this, so...
+   # This makes an error for some reason, but it doesn't work if I don't do it, so...
 arch-chroot "$MNT" chmod +x "/etc/systemd/system/post-install.service"
 arch-chroot "$MNT" chmod +x "/post-install.sh"
 # make the script run on boot
