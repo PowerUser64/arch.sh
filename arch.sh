@@ -27,6 +27,7 @@ TIME_ZONE='America/Los_Angeles' # see `timedatectl list-timezones` for a list of
 LOCALE='en_US.UTF-8'            # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
 KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
 KEY_BIND_MODS=0                 # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
+LAPTOP=0                        # if you are installing on a laptop, set this to 1 to install power management tools
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -206,15 +207,22 @@ typewriter "Installing ${Green}packages${NC}!"
 pause
 # If you're curious why I use this yes command with strange parameters, it's because it will make pacman automatically choose either the default option (the '' and the $'\n' part (the $'\n' part just puts in a newline)), or say yes (the 'y' part)
 # TODO: sort packages in to a meaningful order (maybe on separate lines too?)
-arch-chroot "$MNT" bash -c "yes ''$'\n''y' | pacman -S --color=auto grub{,-btrfs} efibootmgr networkmanager network-manager-applet dialog mtools dosfstools git reflector base-devel linux-headers xdg-user-dirs xdg-utils gvfs gvfs-smb nfs-utils inetutils dnsutils bluez{,-utils} cups pipewire{,-{pulse,alsa,jack}} gst-plugin-pipewire libpulse bash-completion openssh snapper rsync reflector acpi acpi_call tlp ebtables firewalld sof-firmware nss-mdns acpid os-prober ttf-joypixels" || error "$LINENO"
+arch-chroot "$MNT" bash -c "yes ''$'\n''y' | pacman -S --color=auto grub{,-btrfs} efibootmgr networkmanager network-manager-applet dialog mtools dosfstools git reflector base-devel linux-headers xdg-user-dirs xdg-utils gvfs gvfs-smb nfs-utils inetutils dnsutils bluez{,-utils} cups pipewire{,-{pulse,alsa,jack}} gst-plugin-pipewire libpulse bash-completion openssh snapper rsync reflector acpi acpi_call $([[ $LAPTOP ]] && echo 'tlp') ebtables firewalld sof-firmware nss-mdns acpid os-prober ttf-joypixels" || error "$LINENO"
 echo "${Green}Done!${NC}"
 pause
 
 # enable services
-# again, remove TLP if you're not on a laptop
-# do these line line-by-line if you're debugging so the others get performed
 typewriter "Enabling ${Green}services${NC} with systemctl"
-arch-chroot "$MNT" systemctl enable NetworkManager bluetooth cups.service tlp reflector.timer fstrim.timer firewalld acpid || error "$LINENO"
+# This CAN be done all in one shot, but if it is, systemctl won't say what failed
+([[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable tlp.service)   || error "$LINENO"
+arch-chroot "$MNT" systemctl enable NetworkManager.service           || error "$LINENO"
+arch-chroot "$MNT" systemctl enable bluetooth.service                || error "$LINENO"
+arch-chroot "$MNT" systemctl enable cups.service                     || error "$LINENO"
+arch-chroot "$MNT" systemctl enable reflector.timer                  || error "$LINENO"
+arch-chroot "$MNT" systemctl enable fstrim.timer                     || error "$LINENO"
+arch-chroot "$MNT" systemctl enable firewalld.service                || error "$LINENO"
+arch-chroot "$MNT" systemctl enable acpi.service                     || error "$LINENO"
+
 echo "${Green}Done!${NC}"
 
 # bootloader
@@ -283,7 +291,7 @@ cp -f /etc/pacman.d/mirrorlist ${MNT}/etc/pacman.d/mirrorlist || error "$LINENO"
 
 # Uncomment this line to disable installing an AUR helper
 # :<<\#EOAUR
-AUR_HELPER=true
+AUR_HELPER=1
 ##############
 ##   Paru   ##
 ##############
@@ -327,7 +335,7 @@ arch-chroot "$MNT" pacman -S --color=auto --noconfirm gnome-shell-extension-appi
 # TODO: install better libreoffice dictionaries
 
 # AUR packages I like
-if [ "${AUR_HELPER}" = true ];then
+if [[ $AUR_HELPER ]];then
    arch-chroot "$MNT" sudo -u "$USER_TO_ADD" paru -S --noconfirm \
       nautilus-admin nautilus-copy-path \
       pipewire-jack-dropin \
