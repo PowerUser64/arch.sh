@@ -29,9 +29,13 @@ MIRROR_COUNTRY='United States'  # see `reflector --list-countries` for a list of
 TIME_ZONE='America/Los_Angeles' # see `timedatectl list-timezones` for a list of timezones
 LOCALE='en_US.UTF-8'            # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
 KEYMAP='us'                     # see `localectl list-keymaps` for a list of keymaps
-KEY_BIND_MODS=0                 # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
 LAPTOP=0                        # if you are installing on a laptop, set this to 1 to install power management tools
-DCONF_MODS=1                    # (recommended to leave on) Some modifications to GNOME, such as enabling shell extensions installed by the script
+
+# Additional installation settings
+DCONF_MODS_BASIC=1              # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
+DCONF_MODS_PLUS=0               # Some more opinionated dconf tweaks, such as dark theme and 12-hour clock
+DCONF_MODS_KEY_BINDS=0          # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
+AUR_HELPER=1                    # Whether to install an AUR helper (paru by default)
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -379,7 +383,7 @@ chsh "$USER_TO_ADD" -s "$(which zsh)"
 # 3- go back to the terminal and copy paste the output in to a command similar to the ones here
 # (note that you need to put quotes around the quotes as shown here, or it won't work)
 
-[[ $DCONF_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
+[[ $DCONF_MODS_BASIC ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
 #!/bin/bash
 sleep 1
 # More sensible defaults for track pads (Recommended tweak)
@@ -391,7 +395,9 @@ dconf write /org/gnome/desktop/interface/font-antialiasing \"'rgba'\"
 
 # enable shell extensions (Recommended, unless you don't want these)
 dconf write /org/gnome/shell/enabled-extensions \"['appindicatorsupport@rgcjonas.gmail.com', 'middleclickclose@palo.tranquilli.gmail.com']\"
+##EODC
 
+[[ $DCONF_MODS_PLUS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODCP
 # these are more personialized option, use them if you want
 # use the 12-hour clock
 dconf write /org/gnome/desktop/interface/clock-format  \"'12h'\"
@@ -401,9 +407,9 @@ dconf write /org/gtk/tweaks/show-extensions-notice 'false'
 # dark theme please
 dconf write /org/gtk/desktop/gtk-theme \"'Adwita-dark'\"
 dconf write /org/gtk/desktop/icon-theme \"'Papirus-Dark'\"
-##EODC
+##EODCP
 
-[[ $KEY_BIND_MODS ]] && [[ $DCONF_MODS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EOKY
+[[ $DCONF_MODS_KEY_BINDS ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EOKY
 # Keybindings
 # use alt tab to switch windows, rather than switch applications (Recommended tweak)
 dconf write /org/gnome/desktop/wm/keybindings/switch-applications \"'@as []'\"
