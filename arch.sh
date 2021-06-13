@@ -35,7 +35,7 @@ LAPTOP=1                         # if you are installing on a laptop, set this t
 DCONF_MODS_BASIC=1               # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
 DCONF_MODS_PLUS=0                # Some more opinionated dconf tweaks, such as dark theme and 12-hour clock
 DCONF_MODS_KEY_BINDS=0           # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
-AUR_HELPER=1                     # Whether to install an AUR helper (paru by default)
+AUR_HELPER='paru'                    # the AUR helper to install (must have pacman-compatible syntax and have a repository at aur.archlinux.org/<aur_helper_name>.git)
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -301,16 +301,15 @@ cp -f /etc/pacman.d/mirrorlist ${MNT}/etc/pacman.d/mirrorlist || error "$LINENO"
 ##############
 ##   Paru   ##
 ##############
-if [[ $AUR_HELPER ]];then
-   typewriter "Installing ${Green}paru${NC}..."
-   # I tried every way I could think of to get the user's password in to paru here, but I couldn't. Suggestions?
+if [ -n "$AUR_HELPER" ];then
+   typewriter "Installing ${Green}${AUR_HELPER}${NC}..."
    arch-chroot "$MNT" bash -c "
-   cd '/home/${USER_TO_ADD}'
+   cd '/home/$USER_TO_ADD'
    sudo -u '$USER_TO_ADD' mkdir git
    cd git
    pacman -S --color=auto --noconfirm --needed base-devel
-   sudo -u '$USER_TO_ADD' git clone https://aur.archlinux.org/paru.git
-   cd paru
+   sudo -u '$USER_TO_ADD' git clone 'https://aur.archlinux.org/$AUR_HELPER.git'
+   cd '$AUR_HELPER'
    sudo -u '$USER_TO_ADD' makepkg --noconfirm -si
    " || error "$LINENO"
    ########################
@@ -343,8 +342,8 @@ arch-chroot "$MNT" pacman -S --color=auto --noconfirm gnome-shell-extension-appi
 # TODO: install better libreoffice dictionaries
 
 # AUR packages I like
-if [[ $AUR_HELPER ]];then
-   arch-chroot "$MNT" sudo -u "$USER_TO_ADD" paru -S --noconfirm \
+if [ -n "$AUR_HELPER" ];then
+   arch-chroot "$MNT" sudo -u "$USER_TO_ADD" "$AUR_HELPER" -S --noconfirm \
       nautilus-admin nautilus-copy-path \
       pipewire-jack-dropin \
       firefox-extension-gnome-shell-integration gnome-shell-extension-middleclickclose \
