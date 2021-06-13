@@ -29,7 +29,7 @@ MIRROR_COUNTRY='United States'   # see `reflector --list-countries` for a list o
 TIME_ZONE='America/Los_Angeles'  # see `timedatectl list-timezones` for a list of timezones
 LOCALE='en_US.UTF-8'             # see /etc/locale.gen for a list of locales (usually language_COUNTRY.charset)
 KEYMAP='us'                      # see `localectl list-keymaps` for a list of keymaps
-LAPTOP=0                         # if you are installing on a laptop, set this to 1 to install power management tools
+LAPTOP=1                         # if you are installing on a laptop, set this to 1 to install power management tools
 
 # Additional installation settings
 DCONF_MODS_BASIC=1               # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
@@ -96,7 +96,7 @@ if ! ping -q -c 2 -W 1 google.com > /dev/null; then
 else
    typewriter "The system is ${Green}connected${NC} to the internet!"
 fi
-pause
+sleep 0.2 # systemd likes to chime in here and say that ntp time is on or something, so pause to avoid split lines
 
 # Debug
 # :<<\#_EOF
@@ -111,13 +111,13 @@ if ! [ -f ".mirrors_updated" ]; then # Don't refresh mirrors more than once if t
       --protocol https \
       --threads 4 \
       --age 8 \
-      --download\
-      -timeout 2 -\
-      -connection-timeout 2 \
+      --download-timeout 4 \
+      --connection-timeout 4 \
       --sort rate \
       --save /etc/pacman.d/mirrorlist \
       > /dev/null 2>&1 || error "$LINENO" &&
       touch .mirrors_updated # Don't refresh mirrors more than once if the script is run multiple times
+
    typewriter "Mirror update ${Green}complete${NC}"
 fi
 
@@ -136,7 +136,7 @@ typewriter "Formatting $([ -n "${SWAP}" ] && echo -n "${Red}${SWAP}${NC}, ${Red}
 umount -l "$MNT" # unmount the target so the script can be run more than once
 
 # Setup the swap partition if the user specified one above
-([ -z "${SWAP}" ] && (mkswap "${SWAP}" && swapon "${SWAP}") > /dev/null 2>&1) || error $LINENO
+if [ -z "${SWAP}" ];then (mkswap "${SWAP}" && swapon "${SWAP}") > /dev/null 2>&1 || error $LINENO;fi
 mkfs.fat -F32 "${BOOT}" || error "$LINENO"
 mkfs.btrfs -f "${ROOT}" || error "$LINENO"
 echo "${Green}Done!${NC}"
@@ -221,14 +221,16 @@ pause
 # enable services
 typewriter "Enabling ${Green}services${NC} with systemctl"
 # This CAN be done all in one shot, but if it is, systemctl won't say what failed
-arch-chroot "$MNT" systemctl enable NetworkManager.service        || error "$LINENO"
-arch-chroot "$MNT" systemctl enable bluetooth.service             || error "$LINENO"
-arch-chroot "$MNT" systemctl enable cups.service                  || error "$LINENO"
-arch-chroot "$MNT" systemctl enable reflector.timer               || error "$LINENO"
-arch-chroot "$MNT" systemctl enable fstrim.timer                  || error "$LINENO"
-arch-chroot "$MNT" systemctl enable firewalld.service             || error "$LINENO"
-[[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable acpi.service || ! [[ $LAPTOP ]] && error "$LINENO"
-[[ $LAPTOP ]] && arch-chroot "$MNT" systemctl enable tlp.service  || ! [[ $LAPTOP ]] && error "$LINENO"
+arch-chroot "$MNT" systemctl enable NetworkManager.service  || error "$LINENO"
+arch-chroot "$MNT" systemctl enable bluetooth.service       || error "$LINENO"
+arch-chroot "$MNT" systemctl enable cups.service            || error "$LINENO"
+arch-chroot "$MNT" systemctl enable reflector.timer         || error "$LINENO"
+arch-chroot "$MNT" systemctl enable fstrim.timer            || error "$LINENO"
+arch-chroot "$MNT" systemctl enable firewalld.service       || error "$LINENO"
+if [[ $LAPTOP ]];then
+   arch-chroot "$MNT" systemctl enable acpid.service        || error "$LINENO"
+   arch-chroot "$MNT" systemctl enable tlp.service          || error "$LINENO"
+fi
 
 echo "${Green}Done!${NC}"
 
@@ -328,13 +330,12 @@ fi
 # needed
 typewriter "Installing ${Green}graphical things${NC}!"
 pause
-arch-chroot "$MNT" pacman -S --color=auto --noconfirm xf86-video-amdgpu xorg gnome gdm gnome-tweaks gnome-software-packagekit-plugin chrome-gnome-shell pavucontrol || error "$LINENO"
+arch-chroot "$MNT" pacman -S --color=auto --noconfirm xf86-video-amdgpu xorg gnome gdm gnome-tweaks gnome-software-packagekit-plugin pavucontrol || error "$LINENO"
 arch-chroot "$MNT" systemctl enable gdm  || error "$LINENO"
 
 # other graphical applications
-# ones I like
 arch-chroot "$MNT" pacman -S --color=auto --noconfirm gnome-shell-extension-appindicator \
-   dconf-editor gparted guake firefox libreoffice-fresh evince keepassxc kvantum-qt5 drawing \
+   dconf-editor gparted tilix firefox libreoffice-fresh evince keepassxc kvantum-qt5 drawing \
    papirus-icon-theme \
    cantarell-fonts adobe-source-code-pro-fonts ttf-roboto \
    zsh \
@@ -471,13 +472,13 @@ firewall-cmd --reload
 ##   Snapshots   ##
 ###################
 echo "Setting up snapshots..."
-umount "$MNT/.snapshots"
-rm -r "$MNT/.snapshots"
+umount "/.snapshots"
+rm -r "/.snapshots"
 snapper -c root create-config /
-btrfs subvolume delete "$MNT/.snapshots"
-mkdir "$MNT/.snapshots"
+btrfs subvolume delete "/.snapshots"
+mkdir "/.snapshots"
 mount -a
-chmod 750 "$MNT/.snapshots"
+chmod 750 "/.snapshots"
 
 # apply the arch wiki-recommended backup settings (keep a max of 5 hourly and 7 daily)
 sed -i 's/ALLOW_USERS=""/ALLOW_USERS="$USER_TO_ADD"/g' /etc/snapper/configs/root
