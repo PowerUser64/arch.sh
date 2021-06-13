@@ -35,7 +35,7 @@ LAPTOP=1                         # if you are installing on a laptop, set this t
 DCONF_MODS_BASIC=1               # (recommended to leave on) Some basic modifications to GNOME, such as enabling shell extensions installed by the script
 DCONF_MODS_PLUS=0                # Some more opinionated dconf tweaks, such as dark theme and 12-hour clock
 DCONF_MODS_KEY_BINDS=0           # set to 1 to apply some modifications to the default key bindings (review them below first, they're about at line 400)
-AUR_HELPER='paru'                    # the AUR helper to install (must have pacman-compatible syntax and have a repository at aur.archlinux.org/<aur_helper_name>.git)
+AUR_HELPER='paru'                # the AUR helper to install (must have pacman-compatible syntax and have a repository at aur.archlinux.org/<aur_helper_name>.git)
 
 # TODO: figure out how to make all parts of the post-install script run without rebooting
 # TODO: add make color optional (always, auto, never)
@@ -381,9 +381,12 @@ chsh "$USER_TO_ADD" -s "$(which zsh)"
 # 3- go back to the terminal and copy paste the output in to a command similar to the ones here
 # (note that you need to put quotes around the quotes as shown here, or it won't work)
 
+if [[ $DCONF_MODS_BASIC ]] || [[ $DCONF_MODS_PLUS ]] || [[ $DCONF_MODS_KEY_BINDS ]];then
+   PROFILE_LINE='(sleep 1 && bash ~/dconf.sh) &' # A line to add to the profile to auto-apply dconf mods
+   echo '#!/bin/bash' >> "$MNT/home/${USER_TO_ADD}/dconf.sh"
+fi
+
 [[ $DCONF_MODS_BASIC ]] && cat >> "$MNT/home/${USER_TO_ADD}/dconf.sh" << \##EODC
-#!/bin/bash
-sleep 1
 # More sensible defaults for track pads (Recommended tweak)
 dconf write /org/gnome/desktop/peripherals/touchpad/tap-to-click 'true'
 dconf write /org/gnome/desktop/peripherals/touchpad/click-method \"'default'\"
@@ -428,10 +431,19 @@ dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/cus
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/command \"':'\"
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/name \"'Disable Ctrl+Q'\"
 dconf write /org/gnome/settings-daemon/plugins/media-keys/custom-keybindings \"['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']\"
-dconf dump /
+sed -i 's/$PROFILE_LINE//g' ~/.profile
 ##EOKY
 arch-chroot "$MNT" chmod +x "$MNT/home/${USER_TO_ADD}/dconf.sh"
 arch-chroot "$MNT" chown "$USER_TO_ADD" "/home/${USER_TO_ADD}/dconf.sh"
+if [[ $DCONF_MODS_BASIC ]] || [[ $DCONF_MODS_PLUS ]] || [[ $DCONF_MODS_KEY_BINDS ]];then
+   arch-chroot "$MNT" bash -c "
+   chmod +x /home/${USER_TO_ADD}/dconf.sh
+   chown '$USER_TO_ADD' /home/${USER_TO_ADD}/dconf.sh
+   sudo -u '$USER_TO_ADD' bash -c \"echo '$PROFILE_LINE' >> ~/.profile\" # make the script run when the user logs in
+   echo '[[ -f ~/.profile ]] && . ~/.profile' >> /home/${USER_TO_ADD}/.bash_profile # It took me over a month to figure it out, but at last, this is the line that solved all my issues
+   "
+fi
+
 #EODC
 
 ################################
@@ -457,10 +469,6 @@ WantedBy=multi-user.target
 # if you know know how to do any of these things without a post-install script, please submit a pr :D
 cat >> "$MNT/post-install.sh" << \#EOS
 #!/bin/bash
-
-[[ $DCONF_MODS ]] && chmod +x /home/${USER_TO_ADD}/dconf.sh
-[[ $DCONF_MODS ]] && chown "$USER_TO_ADD" /home/${USER_TO_ADD}/dconf.sh
-[[ $DCONF_MODS ]] && sudo -u "$USER_TO_ADD" bash -c "echo '~/dconf.sh' >> ~/.profile" # make the script run when the user logs in
 
 # firewall (it causes errors if it's done outside the script)
 firewall-cmd --add-port=1025-65535/tcp --permanent
