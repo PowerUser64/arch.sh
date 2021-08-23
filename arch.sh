@@ -231,7 +231,6 @@ if [[ $LAPTOP ]];then
    arch-chroot "$MNT" systemctl enable acpid.service        || error "$LINENO"
    arch-chroot "$MNT" systemctl enable tlp.service          || error "$LINENO"
 fi
-
 echo "${Green}Done!${NC}"
 
 # bootloader
